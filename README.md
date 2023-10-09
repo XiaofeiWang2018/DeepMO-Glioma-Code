@@ -1,5 +1,5 @@
 # Multi-task Learning of Histology and Molecular Markers for Classifying Diffuse Glioma
-- This is the official repository of the paper "Multi-task Learning of Histology and MolecularMarkers for Classifying Diffuse Glioma
+- This is the official repository of the paper "Multi-task Learning of Histology and Molecular Markers for Classifying Diffuse Glioma
 " from **MICCAI 2023**[[Paper Link]](https://arxiv.org/abs/2303.14845 "Paper Link")
 
 ## 1. Environment
