@@ -1,4 +1,4 @@
-# Multi-task Learning of Histology and MolecularMarkers for Classifying Diffuse Glioma
+# Multi-task Learning of Histology and Molecular Markers for Classifying Diffuse Glioma
 - This is the official repository of the paper "Multi-task Learning of Histology and MolecularMarkers for Classifying Diffuse Glioma
 " from **MICCAI 2023**[[Paper Link]](https://arxiv.org/abs/2303.14845 "Paper Link")
 
@@ -13,13 +13,13 @@
 ## 2. Train
 Use the below command to train the model on our database.
 ```
-    python ./train.py 
+    python ./main.py 
 ```
 
 ## 3. Test
 Use the below command to test the model on our database.
 ```
-    python ./test.py 
+    python ./test_main.py 
 ```
 
 
