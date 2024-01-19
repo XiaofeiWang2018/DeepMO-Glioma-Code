@@ -21,6 +21,7 @@ def plot_confusion_matrix(cm, savename, title='Confusion Matrix', classes=['G2_O
     x, y = np.meshgrid(ind_array, ind_array)
     thresh = cm.max() / 2.
 
+
     for x_val, y_val in zip(x.flatten(), y.flatten()):
       c = cm[y_val][x_val]
       if c > 0.001:

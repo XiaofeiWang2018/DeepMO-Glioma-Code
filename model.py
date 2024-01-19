@@ -359,13 +359,9 @@ class Cls_His_Grade(nn.Module):
         # logits_Grade = self._fc2_Grade_1(encoded_Grade)  # [BS,2]
 
         encoded_His = torch.mean(encoded_His, dim=2)  # [BS,2500]
-        encoded_His_de0=encoded_His[0].detach().cpu().numpy()
-        encoded_His_de1 = encoded_His[1].detach().cpu().numpy()
-        encoded_His_de2 = encoded_His[2].detach().cpu().numpy()
-        encoded_His_de3 = encoded_His[3].detach().cpu().numpy()
+
         logits_His = self._fc2_His_1(encoded_His)  # [BS,2]
         weight_His_GBM = self._fc2_His_1.weight[3]  # [2500]
-        weight_His_GBM_de=weight_His_GBM.detach().cpu().numpy()
         logits_His_2class=self._fc2_His_2class(encoded_His)  # [BS,2]
         weight_His_GBM_Cls2 = self._fc2_His_2class.weight[1]  # [2500]
 

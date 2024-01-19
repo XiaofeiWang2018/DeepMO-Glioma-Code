@@ -7,7 +7,6 @@ from net import init_weights,get_scheduler,WarmupCosineSchedule
 from matplotlib import pyplot as plt
 import matplotlib as mpl
 import cmaps
-from openslide import OpenSlide
 import h5py
 def train(opt):
     root=r'./models/Mine_pretrain2_exp_45_test10_0302-0538/Mine_model-0008.pth'
@@ -81,7 +80,7 @@ def vis_reconstruct(opt, model,dataloader, gpuID):
 
 
     count = 0
-    excel_label_wsi = pd.read_excel(opt['label_path'], sheet_name='Sheet1', header=0)
+    excel_label_wsi = pd.read_excel(opt['label_path'], sheet_name='wsi_level', header=0)
     excel_wsi = excel_label_wsi.values
     PATIENT_LIST = excel_wsi[:, 0]
     PATIENT_LIST = list(PATIENT_LIST)
@@ -89,8 +88,9 @@ def vis_reconstruct(opt, model,dataloader, gpuID):
     NUM_PATIENT_ALL = len(PATIENT_LIST)  # 952
     TEST_PATIENT_LIST = PATIENT_LIST[0:int(NUM_PATIENT_ALL)]
     TEST_LIST = []
+    TEST_WSI_LIST = os.listdir(r'/home/zeiler/WSI_proj/miccai/vis_results/set0/')
     for i in range(excel_wsi.shape[0]):  # 2612
-        if excel_wsi[:, 0][i] in TEST_PATIENT_LIST:
+        if excel_wsi[:, 1][i]+'.h5' in TEST_WSI_LIST:
             TEST_LIST.append(excel_wsi[i, :])
     TEST_LIST = np.asarray(TEST_LIST)
     for i in range(TEST_LIST.shape[0]):
@@ -122,6 +122,7 @@ def vis_reconstruct(opt, model,dataloader, gpuID):
         results_dict, weight_His_GBM, weight_His_GBM_Cls2 = model[6](encoded_His)
         pred_His_2class = results_dict['logits_His_2class']
         pred_His = results_dict['logits_His']
+
 
         wsi_w = h5py.File('vis_results/set0/' + WSI_name + '.h5')['wsi_w'][()]
         wsi_h = h5py.File('vis_results/set0/' + WSI_name + '.h5')['wsi_h'][()]

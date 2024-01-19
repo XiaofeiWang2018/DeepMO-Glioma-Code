@@ -213,7 +213,7 @@ class Our_Dataset_vis(Dataset):
         self.if_end2end=if_end2end
         self.dataDir = (opt['dataDir']+'extract_224/') if opt['imgSize'][0]==224 else  (opt['dataDir']+'extract_512/')
 
-        excel_label_wsi = pd.read_excel(opt['label_path'],sheet_name='Sheet1',header=0)
+        excel_label_wsi = pd.read_excel(opt['label_path'],sheet_name='wsi_level',header=0)
         excel_wsi =excel_label_wsi.values
         PATIENT_LIST=excel_wsi[:,0]
         np.random.seed(self.opt['seed'])
@@ -225,12 +225,12 @@ class Our_Dataset_vis(Dataset):
         np.random.shuffle(PATIENT_LIST)
         NUM_PATIENT_ALL=len(PATIENT_LIST) # 952
         TEST_PATIENT_LIST=PATIENT_LIST[0:int(NUM_PATIENT_ALL)]
-
+        TEST_WSI_LIST=os.listdir(r'/home/zeiler/WSI_proj/miccai/vis_results/set0/')
         self.TRAIN_LIST=[]
         self.VAL_LIST = []
         self.TEST_LIST = []
         for i in range(excel_wsi.shape[0]):# 2612
-            if excel_wsi[:,0][i] in TEST_PATIENT_LIST:
+            if excel_wsi[:,1][i]+'.h5' in TEST_WSI_LIST:
                 self.TEST_LIST.append(excel_wsi[i,:])
         self.LIST= np.asarray(self.TEST_LIST)
 
@@ -254,54 +254,6 @@ class Our_Dataset_vis(Dataset):
         patch_all = h5py.File(root + self.LIST[index, 1] + '.h5')['Res_feature'][:]  # (1,N,1024)
         return patch_all[0],read_details,self.LIST[index, 1]
 
-    def read_img(self, index):
-        wsi_path = self.dataDir + self.LIST[index, 1]
-        patch_all = []
-        patch_all_ori = []
-        coor_all = []
-        coor_all_ori = []
-        self.img_dir = os.listdir(wsi_path)
-
-        read_details = np.load(self.opt['dataDir'] + 'read_details/' + self.LIST[index, 1] + '.npy', allow_pickle=True)[0]
-        num_patches = read_details.shape[0]
-        max_num = self.opt['fixdim']
-        Use_patch_num = num_patches if num_patches <= max_num else max_num
-        if num_patches <= max_num:
-            times = int(np.floor(max_num / num_patches))
-            remaining = max_num % num_patches
-            for i in range(Use_patch_num):
-                img_temp = io.imread(wsi_path + '/' + str(read_details[i][0]) + '_' + str(read_details[i][1]) + '.jpg')
-                # img_temp = cv2.resize(img_temp, (28, 28))
-                patch_all_ori.append(img_temp)
-                coor_all_ori.append(read_details[i])
-            patch_all = patch_all_ori
-            coor_all = coor_all_ori
-            ####### fixdim0
-            if times > 1:
-                for k in range(times - 1):
-                    patch_all = patch_all + patch_all_ori
-                    coor_all = coor_all + coor_all_ori
-            if not remaining == 0:
-                patch_all = patch_all + patch_all_ori[0:remaining]
-
-        else:
-            for i in range(Use_patch_num):
-                img_temp = io.imread(wsi_path + '/' + str(read_details[int(np.around(i * (num_patches / max_num)))][0]) + '_' + str(read_details[int(np.around(i * (num_patches / max_num)))][1]) + '.jpg')
-                # img_temp = cv2.resize(img_temp, (28, 28))
-                patch_all.append(img_temp)
-
-        patch_all = np.asarray(patch_all)
-
-        # data augmentation
-        patch_all = patch_all.reshape(-1, 224, 3)  # (num_patches*28,28,3)
-        patch_all = patch_all.reshape(-1, 224, 224, 3)  # (num_patches,28,28,3)
-        patch_all = patch_all.reshape(max_num, -1)  # (num_patches,28*28*3)
-
-        patch_all = patch_all / 255.0
-        # patch_all = np.transpose(patch_all, (0, 3, 1, 2))
-        patch_all = patch_all.astype(np.float32)
-
-        return patch_all
 
     def label_gene(self,index):
 

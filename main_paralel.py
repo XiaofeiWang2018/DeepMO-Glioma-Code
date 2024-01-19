@@ -20,7 +20,7 @@ def train(opt):
     Mine_model_init,Mine_model_IDH,Mine_model_1p19q,Mine_model_CDKN,Mine_model_Graph,Mine_model_His,Mine_model_Cls\
         ,opt_init,opt_IDH,opt_1p19q,opt_CDKN,opt_Graph,opt_His,opt_Cls=get_model(opt)
 
-    if opt['decayType']=='exp' or opt['decayType']=='step':
+    if opt['decayType']=='exp':
         Mine_model_sch_init = get_scheduler(opt_init, opt['n_ep'], opt['n_ep_decay'], opt['decayType'], -1)
         Mine_model_sch_IDH = get_scheduler(opt_IDH, opt['n_ep'], opt['n_ep_decay'], opt['decayType'], -1)
         Mine_model_sch_1p19q = get_scheduler(opt_1p19q, opt['n_ep'], opt['n_ep_decay'], opt['decayType'], -1)
@@ -59,11 +59,8 @@ def train(opt):
     total_it = 0
 
     # # Init
-    # root =r'./models/Mine_pretrain2_exp_45_test10_0302-0538/Mine_model-0008.pth'
-    # ckptdir = os.path.join(root)
+    # ckptdir = os.path.join('./pretrain/Mine_dim2500_0226-0028/', 'Mine_model-0045.pth')
     # checkpoint = torch.load(ckptdir)
-    # related_params = {k: v for k, v in checkpoint['init'].items()}
-    # Mine_model_init.load_state_dict(related_params)
     # related_params = {k: v for k, v in checkpoint['IDH'].items()}
     # Mine_model_IDH.load_state_dict(related_params)
     # related_params = {k: v for k, v in checkpoint['1p19q'].items()}
@@ -72,18 +69,14 @@ def train(opt):
     # Mine_model_CDKN.load_state_dict(related_params)
     # related_params = {k: v for k, v in checkpoint['Graph'].items()}
     # Mine_model_Graph.load_state_dict(related_params)
+    # print('Finetune the Mine_model from:%s' % ckptdir)
     # related_params = {k: v for k, v in checkpoint['His'].items()}
     # Mine_model_His.load_state_dict(related_params)
     # related_params = {k: v for k, v in checkpoint['Cls'].items()}
-    # Mine_model_Cls.load_state_dict(related_params, strict=False)
-    #
-    # Mine_model_init.eval()
-    # Mine_model_IDH.eval()
-    # Mine_model_1p19q.eval()
-    # Mine_model_CDKN.eval()
-    # Mine_model_Graph.eval()
-    # Mine_model_His.eval()
-    # Mine_model_Cls.eval()
+    # Mine_model_Cls.load_state_dict(related_params)
+    # related_params = {k: v for k, v in checkpoint['init'].items()}
+    # Mine_model_init.load_state_dict(related_params)
+
 
 
 
@@ -109,6 +102,7 @@ def train(opt):
         Mine_model_CDKN.train()
         Mine_model_Graph.train()
         Mine_model_His.train()
+        # Mine_model_Grade.train()
         Mine_model_Cls.train()
         curep = last_ep + epoch
         lossdict = {'train/init_subnet': 0,'train/IDH_subnet': 0,  'train/1p19q_subnet': 0,'train/CDKN_subnet': 0,'train/Graph_subnet': 0,  'train/His_subnet': 0,'train/Grade_subnet': 0,'train/Cls_subnet': 0}
@@ -133,9 +127,9 @@ def train(opt):
             init_feature=Mine_model_init(img) # (BS,2500,1024)
 
             hidden_states, encoded_IDH = Mine_model_IDH(init_feature)
-            hidden_states, encoded_1p19q = Mine_model_1p19q(hidden_states)
-            encoded_CDKN = Mine_model_CDKN(hidden_states)
-            results_dict,weight_IDH_wt,weight_IDH_mut,weight_1p19q_codel,weight_CDKN_HOMDEL,encoded_IDH0,encoded_1p19q0,encoded_CDKN0 = Mine_model_Graph(encoded_IDH, encoded_1p19q, encoded_CDKN)
+            hidden_states, encoded_1p19q = Mine_model_1p19q(init_feature)
+            encoded_CDKN = Mine_model_CDKN(init_feature)
+            results_dict,weight_IDH_wt,weight_1p19q_codel,encoded_IDH0,encoded_1p19q0,encoded_CDKN0 = Mine_model_Graph(encoded_IDH, encoded_1p19q, encoded_CDKN)
 
             pred_IDH=results_dict['logits_IDH']
             pred_1p19q = results_dict['logits_1p19q']
@@ -165,10 +159,13 @@ def train(opt):
 
             ### ### forward His
             init_feature = Mine_model_init(img)  # (BS,2500,1024)
+
             hidden_states, encoded_His = Mine_model_His(init_feature)
-            results_dict, weight_His_GBM, weight_His_GBM_Cls2 = Mine_model_Cls(encoded_His)
+            # encoded_Grade = Mine_model_Grade(hidden_states)
+            results_dict, weight_His_GBM, weight_His_O = Mine_model_Cls(encoded_His)
             pred_His = results_dict['logits_His']
             pred_His_2class = results_dict['logits_His_2class']
+            # pred_Grade = results_dict['logits_Grade']
 
 
             ### ### backward His
@@ -198,27 +195,25 @@ def train(opt):
                 init_feature = Mine_model_init(img)  # (BS,2500,1024)
 
                 hidden_states, encoded_IDH = Mine_model_IDH(init_feature)
-                hidden_states, encoded_1p19q = Mine_model_1p19q(hidden_states)
-                encoded_CDKN = Mine_model_CDKN(hidden_states)
-                results_dict,weight_IDH_wt,weight_IDH_mut,weight_1p19q_codel,weight_CDKN_HOMDEL,__,_,___ = Mine_model_Graph(encoded_IDH, encoded_1p19q, encoded_CDKN)
+                hidden_states, encoded_1p19q = Mine_model_1p19q(init_feature)
+                encoded_CDKN = Mine_model_CDKN(init_feature)
+                results_dict,weight_IDH_wt,weight_1p19q_codel,__,_,___ = Mine_model_Graph(encoded_IDH, encoded_1p19q, encoded_CDKN)
                 pred_IDH = results_dict['logits_IDH']
                 pred_1p19q = results_dict['logits_1p19q']
                 pred_CDKN = results_dict['logits_CDKN']
 
                 hidden_states, encoded_His = Mine_model_His(init_feature)
-                results_dict, weight_His_GBM, weight_His_GBM_Cls2 = Mine_model_Cls(encoded_His)
+                results_dict, weight_His_GBM, weight_His_O = Mine_model_Cls(encoded_His)
                 pred_His_2class = results_dict['logits_His_2class']
 
-                ####### recently added--convert to 2500
-                weight_IDH_wt = weight_IDH_wt[0:int(weight_IDH_wt.detach().cpu().numpy().shape[0] / len(gpuID))]
-                weight_1p19q_codel = weight_1p19q_codel[
-                                     0:int(weight_1p19q_codel.detach().cpu().numpy().shape[0] / len(gpuID))]
-                weight_His_GBM = weight_His_GBM[0:int(weight_His_GBM.detach().cpu().numpy().shape[0] / len(gpuID))]
-                ####### recently added--convert to 2500
-                loss_mutual_correlation=opt['Network']['corre_loss_ratio']*Mine_model_Cls.module.Loss_mutual_correlation(weight_IDH_wt,weight_1p19q_codel,weight_His_GBM,epoch)
+                loss_mutual_correlation=opt['Network']['corre_loss_ratio']*Mine_model_Cls.module.Loss_mutual_correlation(weight_IDH_wt,weight_1p19q_codel,weight_His_GBM, weight_His_O,epoch)
                 loss_mutual_correlation.requires_grad_(True)
                 loss_mutual_correlation.backward()
 
+                # pred_diag = Diag_predict(pred_IDH, pred_1p19q, pred_CDKN, pred_His_2class)
+                # loss_diag=Mine_model_His.module.calculateLoss_diag(torch.from_numpy(np.array(pred_diag)).cuda(opt['gpus'][0]), label_Diag.float())
+                # loss_diag=loss_diag+loss_mutual_correlation*0.1
+                # loss_diag.backward()
 
                 opt_init.step()
                 opt_His.step()
@@ -228,8 +223,8 @@ def train(opt):
                 opt_1p19q.step()
                 opt_CDKN.step()
                 opt_Graph.step()
+
         #
-        # #
             _, predicted_IDH = torch.max(pred_IDH.data, 1)
             total_IDH = label_IDH.size(0)
             correct_IDH = predicted_IDH.eq(label_IDH.data).cpu().sum()
@@ -260,11 +255,14 @@ def train(opt):
 
             total_it = total_it + 1
             lossdict['train/IDH_subnet'] += loss_IDH.item()
+            # lossdict['train/1p19q_subnet'] += loss_1p19q_subnet.item()
+            # lossdict['train/CDKN_subnet'] += loss_CDKN_subnet.item()
             lossdict['train/1p19q_subnet'] += loss_1p19q.item()
             lossdict['train/CDKN_subnet'] += loss_CDKN.item()
             lossdict['train/Graph_subnet'] += loss_Graph.item()
             lossdict['train/His_subnet'] += loss_His.item()
-
+            # lossdict['train/Grade_subnet'] += loss_Grade_subnet.item()
+            # lossdict['train/Grade_subnet'] += (0.8 * loss_Grade.item())
 
             train_bar.set_description(
                 desc=opt['name'] + ' [%d/%d] I:%.2f |1:%.2f |C:%.2f |H:%.2f' % (
@@ -273,12 +271,14 @@ def train(opt):
                     running_results['acc_1p19q'] / count,
                     running_results['acc_CDKN'] / count,
                     running_results['acc_His'] / count,
+                    # running_results['acc_Grade'] / count,
                 ))
         lossdict['train/IDH_subnet'] = lossdict['train/IDH_subnet'] / count
         lossdict['train/1p19q_subnet'] = lossdict['train/1p19q_subnet'] / count
         lossdict['train/CDKN_subnet'] = lossdict['train/CDKN_subnet'] / count
         lossdict['train/Graph_subnet'] = lossdict['train/Graph_subnet'] / count
         lossdict['train/His_subnet'] = lossdict['train/His_subnet'] / count
+        # lossdict['train/Grade_subnet'] = lossdict['train/Grade_subnet'] / count
         saver.write_scalars(curep, lossdict)
         saver.write_log(curep, lossdict, 'traininglossLog')
 
@@ -291,7 +291,7 @@ def train(opt):
         # torch.nn.utils.clip_grad_norm_(Mine_model_Cls.parameters(), 1)
 
         print('-------------------------------------Val and Test--------------------------------------')
-        if (curep + 1) % 5 == 0:
+        if (curep + 1) % opt['n_ep_save'] == 0:
             if (curep + 1) > (alleps / 2):
                 save_dir = os.path.join(opt['modelDir'], 'Mine_model-%04d.pth' % (curep + 1))
                 state = {
@@ -301,6 +301,7 @@ def train(opt):
                     'CDKN': Mine_model_CDKN.state_dict(),
                     'Graph': Mine_model_Graph.state_dict(),
                     'His': Mine_model_His.state_dict(),
+                    # 'Grade': Mine_model_Grade.state_dict(),
                     'Cls': Mine_model_Cls.state_dict(),
                 }
                 torch.save(state, save_dir)
