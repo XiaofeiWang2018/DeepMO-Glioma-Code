@@ -1,0 +1,47 @@
+name: Mine 
+command: Train # Test
+gpus: [0]
+fixdim: 2500
+decayType: cos
+dataDir: XXX
+
+
+Network:
+
+  lr: 0.003
+  dropout_rate: 0.1
+  IDH_layers: 3
+  1p19q_layers: 2
+  CDKN_layers: 2
+  His_layers: 3
+  Grade_layers: 1
+  Trans_block: 'full' #'full' 'simple'
+  graph_alpha: 0.1
+  corre_loss_ratio: 0.1
+
+
+#### Training setting
+n_ep: 70
+decay_cos_warmup_steps: 35
+
+
+
+#### Directories
+logDir: ./logs
+saveDir: ./outs
+modelDir: ./models
+cm_saveDir: ./cm
+label_path: ./merge_who.xlsx
+
+#### Meta setting main
+dataset: TCGA
+nThreads: 16
+seed: 124
+imgSize: [224,224]
+eva_cm: False
+n_ep_save: 5
+fp16: False
+batchSize: 4
+Val_batchSize: 1
+Test_batchSize: 1
+n_ep_decay: 15
